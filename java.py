@@ -36,6 +36,8 @@ def trust_cert(name, cert_file, alias, storepass='changeit', java_home=None):
         ret['result'] = result_code['none']
         ret['comment'] = 'Java is not installed'
         return ret
+    # Enforce the existence of $JAVA_HOME for keytool
+    os.putenv(r'JAVA_HOME', java_home)
 
     # Make sure the trust store exists; error otherwise
     trust_store = _find_trust_store(java_home)
