@@ -12,7 +12,7 @@ First, deploy the internal CA's public certificate using `file.managed`.
 Create an SLS file similar to the following:
 ```yaml
 Java certificate install:
-  java.trust_cert
+  java.trust_cert:
     - cert_file: /etc/ssl/certs/internal_CA.pem
     - alias: internal_CA
 ```
