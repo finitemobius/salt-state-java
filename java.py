@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 import fnmatch
-import subprocess
+import subprocess as sp
 
 
 def trust_cert(name, cert_file, alias, storepass='changeit', java_home=None):
@@ -56,8 +56,8 @@ def trust_cert(name, cert_file, alias, storepass='changeit', java_home=None):
     # If the alias already exists, nothing to do
     keytool_opts = ['-keystore', trust_store, '-list', '-alias', alias, '-storepass', storepass]
     try:
-        subprocess.check_output([keytool] + keytool_opts, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError:
+        sp.check_output([keytool] + keytool_opts, stderr=sp.STDOUT)
+    except sp.CalledProcessError:
         # The alias does not exist (keep going)
         pass
     else:
@@ -71,8 +71,8 @@ def trust_cert(name, cert_file, alias, storepass='changeit', java_home=None):
     # but I want to catch this if 'test' is set, too.
     keytool_opts = ['-keystore', trust_store, '-list', '-storepass', storepass]
     try:
-        subprocess.check_output([keytool] + keytool_opts, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
+        sp.check_output([keytool] + keytool_opts, stderr=sp.STDOUT)
+    except sp.CalledProcessError as e:
         # keytool failed to open the keystore for some reason
         ret['result'] = result_code['failure']
         ret['comment'] = 'Keystore ' + trust_store + ' problem:\n' + e.output
@@ -81,8 +81,8 @@ def trust_cert(name, cert_file, alias, storepass='changeit', java_home=None):
     # Make sure the certificate file is a valid cert; error otherwise
     keytool_opts = ['-printcert', '-file', cert_file]
     try:
-        subprocess.check_output([keytool] + keytool_opts)
-    except subprocess.CalledProcessError as e:
+        sp.check_output([keytool] + keytool_opts, stderr=sp.STDOUT)
+    except sp.CalledProcessError as e:
         # keytool could not decode the certificate
         ret['result'] = result_code['failure']
         ret['comment'] = 'File ' + cert_file + ' is not a valid certificate:\n' + e.output
@@ -93,8 +93,8 @@ def trust_cert(name, cert_file, alias, storepass='changeit', java_home=None):
         keytool_opts = ['-importcert', '-trustcacerts', '-file', cert_file, '-keystore', trust_store,
                         '-alias', alias, '-storepass', storepass, '-noprompt']
         try:
-            subprocess.check_output([keytool] + keytool_opts, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:
+            sp.check_output([keytool] + keytool_opts, stderr=sp.STDOUT)
+        except sp.CalledProcessError as e:
             # Upon failure, return the Java exception
             ret['result'] = result_code['failure']
             ret['comment'] = e.output
@@ -138,9 +138,9 @@ def _find_java_home(java_home):
     # Instead, we'll hope the system has installed Java correctly, in which case
     #   sourcing /etc/profile will tell us the path
     try:
-        jh = subprocess.check_output(['/bin/bash', '-c', 'source /etc/profile && echo -n $JAVA_HOME'],
-                                     universal_newlines=True)
-    except subprocess.CalledProcessError:
+        jh = sp.check_output(['/bin/bash', '-c', 'source /etc/profile && echo -n $JAVA_HOME'],
+                                     universal_newlines=True, stderr=sp.STDOUT)
+    except sp.CalledProcessError:
         jh = None
     return jh
 
@@ -149,8 +149,8 @@ def _find_keytool(java_home):
     # Find the keytool binary
     for keytool in ['/usr/bin/keytool', java_home + os.sep + 'bin' + os.sep + 'keytool']:
         try:
-            subprocess.check_output([keytool] + ['-help'], stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError:
+            sp.check_output([keytool] + ['-help'], stderr=sp.STDOUT)
+        except sp.CalledProcessError:
             # keytool wasn't found yet
             pass
         else:
